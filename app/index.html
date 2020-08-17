@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="script-src 'self' 'unsafe-inline'"
+    />
+    <link rel="stylesheet" href="css/all.min.css" />
+    <link rel="stylesheet" href="css/materialize.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <title>ImageCompX</title>
+  </head>
+  <body>
+    <div class="container center-align">
+      <h3><i class="fas fa-images"></i> ImageCompX</h3>
+      <p>Choose an image to resize</p>
+      <form id="image-form">
+        <div class="file-field input-field">
+          <div class="btn">
+            <span>Browse</span>
+            <input type="file" id="img" />
+          </div>
+
+          <div class="file-path-wrapper">
+            <input
+              class="file-path validate"
+              type="text"
+              placeholder="Upload file"
+            />
+          </div>
+        </div>
+
+        <p>
+          <strong>Quality:</strong>
+          <em>The lower the quality, the smaller the filesize</em>
+        </p>
+        <p class="range-field">
+          <input type="range" id="slider" min="0" max="100" />
+        </p>
+
+        <input type="submit" class="black btn" value="Resize" />
+      </form>
+
+      <div class="card output">
+        <div class="card-content">
+          Output Path: <span id="output-path"></span>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/materialize.min.js"></script>
+    <script>
+      const path = require('path');
+      const os = require('os');
+
+      const form = document.getElementById('image-form');
+      const slider = document.getElementById('slider');
+      const img = document.getElementById('img');
+      const { ipcRenderer } = require('electron');
+
+      document.getElementById('output-path').innerText = path.join(
+        os.homedir(),
+        'imagecompx'
+      );
+
+      // On submit
+      form.addEventListener('submit', e => {
+        e.preventDefault();
+
+        const imgPath = img.files[0].path;
+        const quality = slider.value;
+
+        // Send data to main process
+        ipcRenderer.send('image:minimize', {
+          imgPath,
+          quality,
+        });
+      });
+
+      // On done
+      ipcRenderer.on('image:done', () => {
+        M.toast({
+          html: `Image resized to ${slider.value}% quality`,
+        });
+      });
+    </script>
+  </body>
+</html>
